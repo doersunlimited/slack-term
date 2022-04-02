@@ -294,8 +294,6 @@ func (s *SlackService) MarkAsRead(channelItem components.ChannelItem) {
 }
 
 func (s *SlackService) encrypt(message string) (string, error) {
-	log.Println("encrypt", message)
-
 	key, err := fernet.DecodeKey(s.Config.EncryptToken)
 	if err != nil {
 		log.Println(err)
@@ -308,7 +306,7 @@ func (s *SlackService) encrypt(message string) (string, error) {
 	}
 	return string(tok), nil
 }
-func (s *SlackService) dencrypt(message string) (string, error) {
+func (s *SlackService) decrypt(message string) (string, error) {
 	key, err := fernet.DecodeKey(s.Config.EncryptToken)
 	if err != nil {
 		return "", fmt.Errorf("decoding encryption key failed %v", err)
@@ -459,14 +457,6 @@ func (s *SlackService) GetMessages(channelID string, count int) ([]components.Me
 	var messages []components.Message
 	var threads []components.ChannelItem
 	for _, message := range history.Messages {
-		if message.Text != "" {
-			text, err := s.dencrypt(message.Text)
-			if err != nil {
-				message.Text = "failed decryption: " + message.Text
-			} else {
-				message.Text = text
-			}
-		}
 		msg := s.CreateMessage(message, channelID)
 		messages = append(messages, msg)
 
@@ -517,12 +507,6 @@ func (s *SlackService) GetMessageByID(messageID string, channelID string) ([]com
 
 	// We break because we're only asking for 1 message
 	for _, message := range history.Messages {
-		text, err := s.dencrypt(message.Text)
-		if err != nil {
-			message.Text = "failed decryption: " + message.Text
-		} else {
-			message.Text = text
-		}
 		msgs = append(msgs, s.CreateMessage(message, channelID))
 		break
 	}
@@ -535,6 +519,12 @@ func (s *SlackService) GetMessageByID(messageID string, channelID string) ([]com
 //
 // [23:59] <erroneousboat> Hello world!
 func (s *SlackService) CreateMessage(message slack.Message, channelID string) components.Message {
+	text, err := s.decrypt(message.Text)
+	if err != nil {
+		message.Text = "failed decryption: " + message.Text
+	} else {
+		message.Text = text
+	}
 	var name string
 
 	// Get username from cache
