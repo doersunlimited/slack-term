@@ -20,6 +20,7 @@ const (
 // Config is the definition of a Config struct
 type Config struct {
 	SlackToken   string                `json:"slack_token"`
+	EncryptToken string                `json:"encrypt_token"`
 	Notify       string                `json:"notify"`
 	Emoji        bool                  `json:"emoji"`
 	SidebarWidth int                   `json:"sidebar_width"`

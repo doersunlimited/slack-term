@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fernet/fernet-go"
 	"github.com/slack-go/slack"
 
 	"github.com/erroneousboat/slack-term/components"
@@ -66,6 +67,7 @@ func NewSlackService(config *config.Config) (*SlackService, error) {
 	// Get name of current user, and set presence to active
 	currentUser, err := svc.Client.GetUserInfo(svc.CurrentUserID)
 	if err != nil {
+		panic(err)
 		svc.CurrentUsername = "slack-term"
 	}
 	svc.CurrentUsername = currentUser.Name
@@ -291,9 +293,36 @@ func (s *SlackService) MarkAsRead(channelItem components.ChannelItem) {
 	}
 }
 
+func (s *SlackService) encrypt(message string) (string, error) {
+	log.Println("encrypt", message)
+
+	key, err := fernet.DecodeKey(s.Config.EncryptToken)
+	if err != nil {
+		log.Println(err)
+		return "", fmt.Errorf("decoding encryption key failed %v", err)
+	}
+	tok, err := fernet.EncryptAndSign([]byte(message), key)
+	if err != nil {
+		log.Println(err)
+		return "", fmt.Errorf("encryption failed %v", err)
+	}
+	return string(tok), nil
+}
+func (s *SlackService) dencrypt(message string) (string, error) {
+	key, err := fernet.DecodeKey(s.Config.EncryptToken)
+	if err != nil {
+		return "", fmt.Errorf("decoding encryption key failed %v", err)
+	}
+	dec := fernet.VerifyAndDecrypt([]byte(message), 0, []*fernet.Key{key})
+	return string(dec), nil
+}
+
 // SendMessage will send a message to a particular channel
 func (s *SlackService) SendMessage(channelID string, message string) error {
-
+	message, err := s.encrypt(message)
+	if err != nil {
+		return err
+	}
 	// https://godoc.org/github.com/nlopes/slack#PostMessageParameters
 	postParams := slack.MsgOptionPostMessageParameters(slack.PostMessageParameters{
 		AsUser:    true,
@@ -304,7 +333,7 @@ func (s *SlackService) SendMessage(channelID string, message string) error {
 	text := slack.MsgOptionText(message, true)
 
 	// https://godoc.org/github.com/nlopes/slack#Client.PostMessage
-	_, _, err := s.Client.PostMessage(channelID, text, postParams)
+	_, _, err = s.Client.PostMessage(channelID, text, postParams)
 	if err != nil {
 		return err
 	}
@@ -316,6 +345,10 @@ func (s *SlackService) SendMessage(channelID string, message string) error {
 // ThreadTimestamp will make it reply to that specific thread. (see:
 // https://api.slack.com/docs/message-threading, 'Posting replies')
 func (s *SlackService) SendReply(channelID string, threadID string, message string) error {
+	message, err := s.encrypt(message)
+	if err != nil {
+		return err
+	}
 	// https://godoc.org/github.com/nlopes/slack#PostMessageParameters
 	postParams := slack.MsgOptionPostMessageParameters(slack.PostMessageParameters{
 		AsUser:          true,
@@ -327,7 +360,7 @@ func (s *SlackService) SendReply(channelID string, threadID string, message stri
 	text := slack.MsgOptionText(message, true)
 
 	// https://godoc.org/github.com/nlopes/slack#Client.PostMessage
-	_, _, err := s.Client.PostMessage(channelID, text, postParams)
+	_, _, err = s.Client.PostMessage(channelID, text, postParams)
 	if err != nil {
 		return err
 	}
@@ -426,6 +459,14 @@ func (s *SlackService) GetMessages(channelID string, count int) ([]components.Me
 	var messages []components.Message
 	var threads []components.ChannelItem
 	for _, message := range history.Messages {
+		if message.Text != "" {
+			text, err := s.dencrypt(message.Text)
+			if err != nil {
+				message.Text = "failed decryption: " + message.Text
+			} else {
+				message.Text = text
+			}
+		}
 		msg := s.CreateMessage(message, channelID)
 		messages = append(messages, msg)
 
@@ -476,6 +517,12 @@ func (s *SlackService) GetMessageByID(messageID string, channelID string) ([]com
 
 	// We break because we're only asking for 1 message
 	for _, message := range history.Messages {
+		text, err := s.dencrypt(message.Text)
+		if err != nil {
+			message.Text = "failed decryption: " + message.Text
+		} else {
+			message.Text = text
+		}
 		msgs = append(msgs, s.CreateMessage(message, channelID))
 		break
 	}

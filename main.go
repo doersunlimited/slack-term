@@ -8,6 +8,7 @@ import (
 
 	"github.com/OpenPeeDeeP/xdg"
 	"github.com/erroneousboat/termui"
+	"github.com/fernet/fernet-go"
 	termbox "github.com/nsf/termbox-go"
 
 	"github.com/erroneousboat/slack-term/context"
@@ -102,6 +103,16 @@ func main() {
 	if err != nil {
 		termbox.Close()
 		log.Println(err)
+		os.Exit(0)
+	}
+	if ctx.Config.EncryptToken == "" {
+		termbox.Close()
+		log.Println("invalid encrypt_token value in config")
+		os.Exit(0)
+	}
+	if _, err := fernet.DecodeKey(ctx.Config.EncryptToken); err != nil {
+		termbox.Close()
+		log.Println("failed to decode encrypt key", err)
 		os.Exit(0)
 	}
 

@@ -7,6 +7,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/erroneousboat/termui v0.0.0-20170923115141-80f245cdfa04 h1:DaFwoQC0Neeb2y2CVFxDPrS1BeyWAkKc4VVBDTZ0N98=
 github.com/erroneousboat/termui v0.0.0-20170923115141-80f245cdfa04/go.mod h1:UPpsbgDrqmUayOFOkCGD7+xrBIml/1dA0dsqTRnZqac=
+github.com/fernet/fernet-go v0.0.0-20211208181803-9f70042a33ee h1:v6Eju/FhxsACGNipFEPBZZAzGr1F/jlRQr1qiBw2nEE=
+github.com/fernet/fernet-go v0.0.0-20211208181803-9f70042a33ee/go.mod h1:2H9hjfbpSMHwY503FclkV/lZTBh2YlOmLLSda12uL8c=
 github.com/go-test/deep v1.0.4 h1:u2CU3YKy9I2pmu9pX0eq50wCgjfGIt539SqR7FbHiho=
 github.com/go-test/deep v1.0.4/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
 github.com/gorilla/websocket v1.2.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=

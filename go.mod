@@ -6,6 +6,7 @@ require (
 	github.com/0xAX/notificator v0.0.0-20171022182052-88d57ee9043b
 	github.com/OpenPeeDeeP/xdg v0.2.0
 	github.com/erroneousboat/termui v0.0.0-20170923115141-80f245cdfa04
+	github.com/fernet/fernet-go v0.0.0-20211208181803-9f70042a33ee // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/lithammer/fuzzysearch v1.1.0
